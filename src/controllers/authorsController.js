@@ -1,62 +1,111 @@
 import authors from '../models/Autor.js';
 
 class AuthorController {
-  static listAuthors = (request, response) => {
-    authors.find((err, livros) => {
-      response.status(200).json(livros);
-    });
+  static listAuthors = async (request, response) => {
+    try {
+      const result = await authors.find({});
+
+      response.status(200).send(result);
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
   };
 
-  static listAuthorById = (request, response) => {
-    const { id } = request.params;
+  static listAuthorById = async (request, response) => {
+    try {
+      const { id } = request.params;
+      const result = await authors.findById(id);
 
-    authors.findById(id, (err, livro) => {
-      if (err) {
-        response
+      if (!id) {
+        return response.status(404).send({ message: `This ${id} not found!!` });
+      }
+
+      response.status(200).send(result);
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
+  };
+
+  static createAuthor = async (request, response) => {
+    try {
+      const { nome, nacionalidade } = request.body;
+
+      if (!nome || !nacionalidade) {
+        return response
           .status(400)
-          .send({ message: `${err.message} - ${id} id not found` });
-      } else {
-        response.status(200).send(livro.toJSON());
+          .send({ message: 'Nome and Nacionalidade are required!' });
       }
-    });
+
+      const existingAuthor = await authors.findOne({ nome });
+
+      if (existingAuthor) {
+        return response
+          .status(409)
+          .send({ message: 'Este autor já está cadastrado' });
+      }
+
+      const livro = new authors({ nome, nacionalidade });
+      const result = await livro.save();
+
+      response.status(201).send(result);
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
   };
 
-  static createAuthor = (request, response) => {
-    const livro = new authors(request.body);
+  static updateAuthor = async (request, response) => {
+    try {
+      const { id } = request.params;
+      const { nome, nacionalidade } = request.body;
 
-    livro.save((err) => {
-      if (err) {
-        response
-          .status(500)
-          .send({ message: `${err.message} - Failed to register the author` });
-      } else {
-        response.status(201).send(livro.toJSON());
+      if (!id) {
+        return response.status(404).send({ message: `This ${id} not found!!` });
       }
-    });
+
+      if (!nome || !nacionalidade) {
+        return response.status(400).send({
+          message: 'Nome and Nacionalidade are required!',
+        });
+      }
+
+      await authors.findByIdAndUpdate(id, {
+        $set: { nome, nacionalidade },
+      });
+
+      response.status(200).send({ message: 'Autor atualizado com sucesso' });
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
   };
 
-  static updateAuthor = (request, response) => {
-    const { id } = request.params;
+  static deleteAuthor = async (request, response) => {
+    try {
+      const { id } = request.params;
 
-    authors.findByIdAndUpdate(id, { $set: request.body }, (err) => {
-      if (!err) {
-        response.status(200).send({ message: 'Successfully updated author' });
-      } else {
-        response.status(500).send({ message: err.message });
+      if (!id) {
+        return response.status(404).send({ message: `This ${id} not found!!` });
       }
-    });
-  };
 
-  static deleteAuthor = (request, response) => {
-    const { id } = request.params;
-
-    authors.findByIdAndDelete(id, (err) => {
-      if (!err) {
-        response.status(200).send({ message: 'Successfully deleted author!!' });
-      } else {
-        response.status(500).send({ message: err.message });
-      }
-    });
+      await authors.findByIdAndDelete(id);
+      response.status(200).send({ message: 'Autor removido com sucesso' });
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
   };
 }
 

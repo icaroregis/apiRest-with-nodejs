@@ -27,50 +27,94 @@ class BookController {
       });
   };
 
-  static createBook = (request, response) => {
-    const livro = new livros(request.body);
+  static createBook = async (request, response) => {
+    try {
+      const { titulo, autor, editora, numeroPaginas } = request.body;
 
-    livro.save((err) => {
-      if (err) {
-        response
-          .status(500)
-          .send({ message: `${err.message} - Failed to register the book` });
-      } else {
-        response.status(201).send(livro.toJSON());
+      if (!titulo || !autor || !editora || !numeroPaginas) {
+        return response.status(400).send({
+          message: 'titulo, autor, editora and numeroPaginas are required!',
+        });
       }
-    });
+
+      const existingAuthor = await livros.findOne({ titulo });
+
+      if (existingAuthor) {
+        return response
+          .status(409)
+          .send({ message: 'Este Livro já está cadastrado' });
+      }
+
+      const livro = new livros({ titulo, autor, editora, numeroPaginas });
+      const result = await livro.save();
+
+      response.status(201).send(result);
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
   };
 
-  static updateBook = (request, response) => {
-    const { id } = request.params;
+  static updateBook = async (request, response) => {
+    try {
+      const { id } = request.params;
+      const { titulo, autor, editora, numeroPaginas } = request.body;
 
-    livros.findByIdAndUpdate(id, { $set: request.body }, (err) => {
-      if (!err) {
-        response.status(200).send({ message: 'Successfully updated book' });
-      } else {
-        response.status(500).send({ message: err.message });
+      if (!id) {
+        return response.status(404).send({ message: `This ${id} not found!!` });
       }
-    });
+
+      if (!titulo || !autor || !editora | !numeroPaginas) {
+        return response.status(400).send({
+          message: 'titulo, autor, editora and numeroPaginas are required!',
+        });
+      }
+
+      await livros.findByIdAndUpdate(id, {
+        $set: { titulo, autor, editora, numeroPaginas },
+      });
+
+      response.status(200).send({ message: 'Livro atualizado com sucesso' });
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
   };
 
-  static deleteBook = (request, response) => {
-    const { id } = request.params;
+  static deleteBook = async (request, response) => {
+    try {
+      const { id } = request.params;
 
-    livros.findByIdAndDelete(id, (err) => {
-      if (!err) {
-        response.status(200).send({ message: 'Successfully deleted book!!' });
-      } else {
-        response.status(500).send({ message: err.message });
+      if (!id) {
+        return response.status(404).send({ message: `${id} id not found!!` });
       }
-    });
+
+      await livros.findByIdAndDelete(id);
+      response.status(200).send({ message: 'Livro removido com sucesso' });
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
   };
 
-  static listBooksByPublisher = (req, res) => {
-    const editora = req.query.editora;
+  static listBooksByPublisher = (request, response) => {
+    try {
+      const { editora } = request.query;
 
-    livros.find({ editora: editora }, {}, (err, livros) => {
-      res.status(200).send(livros);
-    });
+      const result = livros.find({ editora: editora }, {});
+      response.status(200).send(result);
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
+      });
+    }
   };
 }
 
