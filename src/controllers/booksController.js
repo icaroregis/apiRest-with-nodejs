@@ -7,7 +7,7 @@ class BookController {
       response.status(200).send(result);
     } catch (error) {
       response.status(500).send({
-        message: `${error}  
+        message: `${error.message}   
       An error occurred on the server.`,
       });
     }
@@ -16,16 +16,16 @@ class BookController {
   static listBookById = async (request, response) => {
     try {
       const { id } = request.params;
+      const result = await livros.findById(id).populate('autor').exec();
 
-      if (!id) {
-        return response.status(404).send({ message: `This ${id} not found!!` });
+      if (!result) {
+        return response.status(404).send({ message: `${id} id not found!!` });
       }
 
-      const result = await livros.findById(id).populate('autor').exec();
       response.status(200).send(result);
     } catch (error) {
       response.status(500).send({
-        message: `${error}  
+        message: `${error.message}   
       An error occurred on the server.`,
       });
     }
@@ -55,7 +55,7 @@ class BookController {
       response.status(201).send(result);
     } catch (error) {
       response.status(500).send({
-        message: `${error}  
+        message: `${error.message}   
       An error occurred on the server.`,
       });
     }
@@ -67,7 +67,7 @@ class BookController {
       const { titulo, autor, editora, numeroPaginas } = request.body;
 
       if (!id) {
-        return response.status(404).send({ message: `This ${id} not found!!` });
+        return response.status(404).send({ message: `${id} id not found!!` });
       }
 
       if (!titulo || !autor || !editora | !numeroPaginas) {
@@ -83,7 +83,7 @@ class BookController {
       response.status(200).send({ message: 'Livro atualizado com sucesso' });
     } catch (error) {
       response.status(500).send({
-        message: `${error}  
+        message: `${error.message}   
       An error occurred on the server.`,
       });
     }
@@ -101,7 +101,7 @@ class BookController {
       response.status(200).send({ message: 'Livro removido com sucesso' });
     } catch (error) {
       response.status(500).send({
-        message: `${error}  
+        message: `${error.message}   
       An error occurred on the server.`,
       });
     }
@@ -115,7 +115,7 @@ class BookController {
       response.status(200).send(result);
     } catch (error) {
       response.status(500).send({
-        message: `${error}  
+        message: `${error.message}   
       An error occurred on the server.`,
       });
     }
