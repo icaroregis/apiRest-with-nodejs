@@ -1,4 +1,4 @@
-import authors from '../models/Autor.js';
+import { authors } from '../models/index.js';
 
 class AuthorController {
   static listAuthors = async (request, response, next) => {

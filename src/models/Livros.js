@@ -10,7 +10,15 @@ const livroSchema = new mongoose.Schema({
     required: true,
   },
   editora: { type: String, required: true },
-  numeroPaginas: { type: Number },
+  numeroPaginas: {
+    type: Number,
+    validate: {
+      validator: (value) => {
+        return value >= 10 && value <= 5000;
+      },
+      message: 'O número de páginas deve estar entre 10 e 5000!',
+    },
+  },
 });
 
 const livros = mongoose.model('books', livroSchema);

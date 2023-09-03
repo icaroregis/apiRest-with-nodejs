@@ -9,9 +9,13 @@ export default function manipuladorDeErros(error, request, response, next) {
   }
 
   if (error instanceof mongoose.Error.ValidationError) {
-    return response
-      .status(400)
-      .send({ message: 'Houve um erro de validação!' });
+    const mensagensErro = Object.values(error.errors)
+      .map((erro) => erro.message)
+      .join('; ');
+
+    return response.status(400).send({
+      message: `Os seguintes erros foram encontrados: ${mensagensErro}`,
+    });
   }
 
   return response.status(500).send({
