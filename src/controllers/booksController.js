@@ -1,30 +1,34 @@
 import livros from '../models/Livros.js';
 
 class BookController {
-  static listBooks = (request, response) => {
-    livros
-      .find()
-      .populate('autor')
-      .exec((err, livros) => {
-        response.status(200).json(livros);
+  static listBooks = async (request, response) => {
+    try {
+      const result = await livros.find().populate('autor').exec();
+      response.status(200).send(result);
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
       });
+    }
   };
 
-  static listBookById = (request, response) => {
-    const { id } = request.params;
+  static listBookById = async (request, response) => {
+    try {
+      const { id } = request.params;
 
-    livros
-      .findById(id)
-      .populate('autor')
-      .exec((err, livro) => {
-        if (err) {
-          response
-            .status(400)
-            .send({ message: `${err.message} - ${id} id not found` });
-        } else {
-          response.status(200).send(livro.toJSON());
-        }
+      if (!id) {
+        return response.status(404).send({ message: `This ${id} not found!!` });
+      }
+
+      const result = await livros.findById(id).populate('autor').exec();
+      response.status(200).send(result);
+    } catch (error) {
+      response.status(500).send({
+        message: `${error}  
+      An error occurred on the server.`,
       });
+    }
   };
 
   static createBook = async (request, response) => {

@@ -4,7 +4,6 @@ class AuthorController {
   static listAuthors = async (request, response) => {
     try {
       const result = await authors.find({});
-
       response.status(200).send(result);
     } catch (error) {
       response.status(500).send({
