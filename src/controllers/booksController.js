@@ -13,8 +13,9 @@ class BookController {
   static listBookById = async (request, response, next) => {
     try {
       const { id } = request.params;
-      const result = await livros.findById(id).populate('autor').exec();
 
+      //Verifica a existência do id
+      const result = await livros.findById(id).populate('autor').exec();
       if (!result) {
         return response.status(404).send({ message: `${id} id not found!!` });
       }
@@ -28,26 +29,26 @@ class BookController {
   static createBook = async (request, response, next) => {
     try {
       const { titulo, autor, editora, numeroPaginas } = request.body;
+
+      //Verifica se os campos obrigatórios foram passados.
       const camposObrigatorios = [
         'titulo',
         'autor',
         'editora',
         'numeroPaginas',
       ];
-
       const faltandoCampos = camposObrigatorios.filter(
         (campo) => !request.body[campo],
       );
-
       if (faltandoCampos.length > 0) {
         return response.status(400).json({
           message: `Campos obrigatórios faltando: ${faltandoCampos.join(', ')}`,
         });
       }
 
-      const existingAuthor = await livros.findOne({ titulo });
-
-      if (existingAuthor) {
+      //verifica se o livro já esta cadastrado no banco
+      const existingLivro = await livros.findOne({ titulo });
+      if (existingLivro) {
         return response
           .status(409)
           .send({ message: 'Este Livro já está cadastrado' });
@@ -66,25 +67,35 @@ class BookController {
     try {
       const { id } = request.params;
       const { titulo, autor, editora, numeroPaginas } = request.body;
+
+      //Verifica a existência do id
+      const result = await livros.findById(id).populate('autor').exec();
+      if (!result) {
+        return response.status(404).send({ message: `${id} id not found!!` });
+      }
+
+      //Verifica se os campos obrigatórios foram passados.
       const camposObrigatorios = [
         'titulo',
         'autor',
         'editora',
         'numeroPaginas',
       ];
-
-      if (!id) {
-        return response.status(404).send({ message: `${id} id not found!!` });
-      }
-
-      const faltandoCampos = camposObrigatorios.filter((campo) => {
-        return !request.body[campo];
-      });
-
+      const faltandoCampos = camposObrigatorios.filter(
+        (campo) => !request.body[campo],
+      );
       if (faltandoCampos.length > 0) {
         return response.status(400).json({
           message: `Campos obrigatórios faltando: ${faltandoCampos.join(', ')}`,
         });
+      }
+
+      //verifica se o livro já esta cadastrado no banco
+      const existingLivro = await livros.findOne({ titulo });
+      if (existingLivro) {
+        return response
+          .status(409)
+          .send({ message: 'Este Livro já está cadastrado' });
       }
 
       await livros.findByIdAndUpdate(id, {
@@ -101,7 +112,9 @@ class BookController {
     try {
       const { id } = request.params;
 
-      if (!id) {
+      //Verifica a existência do id
+      const result = await livros.findById(id).populate('autor').exec();
+      if (!result) {
         return response.status(404).send({ message: `${id} id not found!!` });
       }
 
