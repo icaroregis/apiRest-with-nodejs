@@ -3,8 +3,28 @@ import { authors, livros } from '../models/index.js';
 class BookController {
   static listBooks = async (request, response, next) => {
     try {
-      const result = await livros.find().populate('autor').exec();
-      response.status(200).send(result);
+      let {
+        limite = 5,
+        pagina = 1,
+        campoOrdenacao = '_id',
+        ordem = -1,
+      } = request.query;
+
+      limite = Number(limite);
+      pagina = Number(pagina);
+      ordem = Number(ordem);
+
+      if (limite > 0 && pagina > 0) {
+        const result = await livros
+          .find()
+          .sort({ [campoOrdenacao]: ordem })
+          .skip((pagina - 1) * limite)
+          .limit(limite)
+          .populate('autor')
+          .exec();
+
+        response.status(200).send(result);
+      }
     } catch (error) {
       next(error);
     }
@@ -128,8 +148,13 @@ class BookController {
   static searchBookByFilter = async (request, response, next) => {
     try {
       const busca = await processaBusca(request.query);
-      const result = await livros.find(busca).populate('autor');
-      response.status(200).send(result);
+
+      if (busca !== null) {
+        const result = await livros.find(busca).populate('autor');
+        response.status(200).send(result);
+      } else {
+        response.status(200).send([]);
+      }
     } catch (error) {
       next(error);
     }
@@ -141,7 +166,7 @@ async function processaBusca(params) {
   //Fazendo busca pelo titulo ou editora ou os dois.
   //const regexTitulo = new RegExp(titulo, 'i');
   //const regexEditora = new RegExp(editora, "i");
-  const busca = {};
+  let busca = {};
   editora ? (busca.editora = { $regex: editora, $options: 'i' }) : '';
   titulo ? (busca.titulo = { $regex: titulo, $options: 'i' }) : '';
 
@@ -154,10 +179,13 @@ async function processaBusca(params) {
   maxPaginas ? (busca.numeroPaginas.$lte = maxPaginas) : '';
 
   if (nomeAutor) {
+    //Verifica existência do autor.
     const autor = await authors.findOne({ nome: nomeAutor });
-    const autorId = autor._id;
-
-    busca.autor = autorId;
+    if (autor !== null) {
+      busca.autor = autor._id;
+    } else {
+      busca = null;
+    }
   }
 
   return busca;
