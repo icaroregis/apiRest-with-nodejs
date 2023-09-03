@@ -1,19 +1,16 @@
 import livros from '../models/Livros.js';
 
 class BookController {
-  static listBooks = async (request, response) => {
+  static listBooks = async (request, response, next) => {
     try {
       const result = await livros.find().populate('autor').exec();
       response.status(200).send(result);
     } catch (error) {
-      response.status(500).send({
-        message: `${error.message}   
-      An error occurred on the server.`,
-      });
+      next(error);
     }
   };
 
-  static listBookById = async (request, response) => {
+  static listBookById = async (request, response, next) => {
     try {
       const { id } = request.params;
       const result = await livros.findById(id).populate('autor').exec();
@@ -24,14 +21,11 @@ class BookController {
 
       response.status(200).send(result);
     } catch (error) {
-      response.status(500).send({
-        message: `${error.message}   
-      An error occurred on the server.`,
-      });
+      next(error);
     }
   };
 
-  static createBook = async (request, response) => {
+  static createBook = async (request, response, next) => {
     try {
       const { titulo, autor, editora, numeroPaginas } = request.body;
 
@@ -54,14 +48,11 @@ class BookController {
 
       response.status(201).send(result);
     } catch (error) {
-      response.status(500).send({
-        message: `${error.message}   
-      An error occurred on the server.`,
-      });
+      next(error);
     }
   };
 
-  static updateBook = async (request, response) => {
+  static updateBook = async (request, response, next) => {
     try {
       const { id } = request.params;
       const { titulo, autor, editora, numeroPaginas } = request.body;
@@ -82,14 +73,11 @@ class BookController {
 
       response.status(200).send({ message: 'Livro atualizado com sucesso' });
     } catch (error) {
-      response.status(500).send({
-        message: `${error.message}   
-      An error occurred on the server.`,
-      });
+      next(error);
     }
   };
 
-  static deleteBook = async (request, response) => {
+  static deleteBook = async (request, response, next) => {
     try {
       const { id } = request.params;
 
@@ -100,24 +88,18 @@ class BookController {
       await livros.findByIdAndDelete(id);
       response.status(200).send({ message: 'Livro removido com sucesso' });
     } catch (error) {
-      response.status(500).send({
-        message: `${error.message}   
-      An error occurred on the server.`,
-      });
+      next(error);
     }
   };
 
-  static listBooksByPublisher = (request, response) => {
+  static listBooksByPublisher = (request, response, next) => {
     try {
       const { editora } = request.query;
 
       const result = livros.find({ editora: editora }, {});
       response.status(200).send(result);
     } catch (error) {
-      response.status(500).send({
-        message: `${error.message}   
-      An error occurred on the server.`,
-      });
+      next(error);
     }
   };
 }
