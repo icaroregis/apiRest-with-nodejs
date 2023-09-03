@@ -28,10 +28,20 @@ class BookController {
   static createBook = async (request, response, next) => {
     try {
       const { titulo, autor, editora, numeroPaginas } = request.body;
+      const camposObrigatorios = [
+        'titulo',
+        'autor',
+        'editora',
+        'numeroPaginas',
+      ];
 
-      if (!titulo || !autor || !editora || !numeroPaginas) {
-        return response.status(400).send({
-          message: 'titulo, autor, editora and numeroPaginas are required!',
+      const faltandoCampos = camposObrigatorios.filter(
+        (campo) => !request.body[campo],
+      );
+
+      if (faltandoCampos.length > 0) {
+        return response.status(400).json({
+          message: `Campos obrigatórios faltando: ${faltandoCampos.join(', ')}`,
         });
       }
 
@@ -56,14 +66,24 @@ class BookController {
     try {
       const { id } = request.params;
       const { titulo, autor, editora, numeroPaginas } = request.body;
+      const camposObrigatorios = [
+        'titulo',
+        'autor',
+        'editora',
+        'numeroPaginas',
+      ];
 
       if (!id) {
         return response.status(404).send({ message: `${id} id not found!!` });
       }
 
-      if (!titulo || !autor || !editora | !numeroPaginas) {
-        return response.status(400).send({
-          message: 'titulo, autor, editora and numeroPaginas are required!',
+      const faltandoCampos = camposObrigatorios.filter((campo) => {
+        return !request.body[campo];
+      });
+
+      if (faltandoCampos.length > 0) {
+        return response.status(400).json({
+          message: `Campos obrigatórios faltando: ${faltandoCampos.join(', ')}`,
         });
       }
 

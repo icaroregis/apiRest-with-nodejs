@@ -13,8 +13,9 @@ class AuthorController {
   static listAuthorById = async (request, response, next) => {
     try {
       const { id } = request.params;
-      const result = await authors.findById(id);
 
+      //Verifica existência do id.
+      const result = await authors.findById(id);
       if (!result) {
         return response.status(404).send({ message: `${id} id not found!!` });
       }
@@ -29,14 +30,19 @@ class AuthorController {
     try {
       const { nome, nacionalidade } = request.body;
 
-      if (!nome || !nacionalidade) {
-        return response
-          .status(400)
-          .send({ message: 'Nome and Nacionalidade are required!' });
+      //Verifica se os campos obrigatórios foram passados.
+      const camposObrigatorios = ['nome', 'nacionalidade'];
+      const faltandoCampos = camposObrigatorios.filter((campo) => {
+        return !request.body[campo];
+      });
+      if (faltandoCampos.length > 0) {
+        return response.status(400).json({
+          message: `Campos obrigatórios faltando: ${faltandoCampos.join(', ')}`,
+        });
       }
 
+      //verifica se o autor já esta cadastrado no banco
       const existingAuthor = await authors.findOne({ nome });
-
       if (existingAuthor) {
         return response
           .status(409)
@@ -57,18 +63,25 @@ class AuthorController {
       const { id } = request.params;
       const { nome, nacionalidade } = request.body;
 
-      if (!id) {
-        return response.status(400).json({ message: `${id} id not found!!` });
+      //Verifica existência do id.
+      const idExists = await authors.findById(id);
+      if (!idExists) {
+        return response.status(404).send({ message: `${id} id not found!!` });
       }
 
-      if (!nome || !nacionalidade) {
-        return response.status(400).send({
-          message: 'Nome and Nacionalidade are required!',
+      //Verifica se os campos obrigatórios foram passados.
+      const camposObrigatorios = ['nome', 'nacionalidade'];
+      const faltandoCampos = camposObrigatorios.filter((campo) => {
+        return !request.body[campo];
+      });
+      if (faltandoCampos.length > 0) {
+        return response.status(400).json({
+          message: `Campos obrigatórios faltando: ${faltandoCampos.join(', ')}`,
         });
       }
 
+      //verifica se o autor já esta cadastrado no banco
       const existingAuthor = await authors.findOne({ nome });
-
       if (existingAuthor) {
         return response
           .status(409)
@@ -89,7 +102,9 @@ class AuthorController {
     try {
       const { id } = request.params;
 
-      if (!id) {
+      //Verifica existência do id.
+      const idExists = await authors.findById(id);
+      if (!idExists) {
         return response.status(404).send({ message: `${id} id not found!!` });
       }
 
