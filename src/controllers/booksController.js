@@ -1,4 +1,4 @@
-import { livros } from '../models/index.js';
+import { authors, livros } from '../models/index.js';
 
 class BookController {
   static listBooks = async (request, response, next) => {
@@ -125,16 +125,42 @@ class BookController {
     }
   };
 
-  static listBooksByPublisher = (request, response, next) => {
+  static searchBookByFilter = async (request, response, next) => {
     try {
-      const { editora } = request.query;
-
-      const result = livros.find({ editora: editora }, {});
+      const busca = await processaBusca(request.query);
+      const result = await livros.find(busca).populate('autor');
       response.status(200).send(result);
     } catch (error) {
       next(error);
     }
   };
+}
+
+async function processaBusca(params) {
+  const { editora, titulo, minPaginas, maxPaginas, nomeAutor } = params;
+  //Fazendo busca pelo titulo ou editora ou os dois.
+  //const regexTitulo = new RegExp(titulo, 'i');
+  //const regexEditora = new RegExp(editora, "i");
+  const busca = {};
+  editora ? (busca.editora = { $regex: editora, $options: 'i' }) : '';
+  titulo ? (busca.titulo = { $regex: titulo, $options: 'i' }) : '';
+
+  //inicializando uma nova propriedade numeroPaginas ao objeto busca como objeto vazio.
+  minPaginas || maxPaginas ? (busca.numeroPaginas = {}) : '';
+
+  //gte = Greater Than or Equal = Maior ou igual que.
+  minPaginas ? (busca.numeroPaginas.$gte = minPaginas) : '';
+  //lte = Less Than or Equal = Menor ou igual que.
+  maxPaginas ? (busca.numeroPaginas.$lte = maxPaginas) : '';
+
+  if (nomeAutor) {
+    const autor = await authors.findOne({ nome: nomeAutor });
+    const autorId = autor._id;
+
+    busca.autor = autorId;
+  }
+
+  return busca;
 }
 
 export default BookController;
