@@ -3,28 +3,9 @@ import { authors, livros } from '../models/index.js';
 class BookController {
   static listBooks = async (request, response, next) => {
     try {
-      let {
-        limite = 5,
-        pagina = 1,
-        campoOrdenacao = '_id',
-        ordem = -1,
-      } = request.query;
-
-      limite = Number(limite);
-      pagina = Number(pagina);
-      ordem = Number(ordem);
-
-      if (limite > 0 && pagina > 0) {
-        const result = await livros
-          .find()
-          .sort({ [campoOrdenacao]: ordem })
-          .skip((pagina - 1) * limite)
-          .limit(limite)
-          .populate('autor')
-          .exec();
-
-        response.status(200).send(result);
-      }
+      const buscaLivros = livros.find({});
+      request.resultado = buscaLivros;
+      next();
     } catch (error) {
       next(error);
     }
@@ -150,8 +131,9 @@ class BookController {
       const busca = await processaBusca(request.query);
 
       if (busca !== null) {
-        const result = await livros.find(busca).populate('autor');
-        response.status(200).send(result);
+        const livrosResultados = livros.find(busca).populate('autor');
+        request.resultado = livrosResultados;
+        next();
       } else {
         response.status(200).send([]);
       }
